@@ -15,7 +15,7 @@ Questo progetto utilizza modelli avanzati di Machine Learning per classificare i
 
 ## Dipendenze necessarie
 
-Assicurati di avere installato Python 3.8 o versioni successive. Le librerie richieste per il progetto sono elencate di seguito:
+Assicurati di avere installato Python 3.8 o versioni successive fino alla 3.12 (3.13 non supporta pytorch). Le librerie richieste per il progetto sono elencate di seguito:
 
 ### Librerie per il preprocessing, allenamento e testing:
 - `os`: libreria standard per operazioni sui file e directory
