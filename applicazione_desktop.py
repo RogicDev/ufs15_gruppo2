@@ -7,11 +7,21 @@ import pandas as pd
 from torchvision import models
 import os
 import pyttsx3  # Libreria per Text-to-Speech
+import pygame  # Per la musica e i suoni
 
 # Percorsi dei file
 MODEL_PATH = "pokemon_classifier.pth"
 POKEDEX_PATH = "Pokedex.xlsx"
 DATASET_DIR = "data"
+BACKGROUND_MUSIC_PATH = "background_music.mp3"
+# BUTTON_SOUND_PATH = "button_click.wav"
+
+# Inizializza pygame per la musica e i suoni
+pygame.mixer.init()
+pygame.mixer.music.load(BACKGROUND_MUSIC_PATH)  # Carica la musica di background
+pygame.mixer.music.play(-1)  # Riproduci in loop la musica di background
+
+# button_click_sound = pygame.mixer.Sound(BUTTON_SOUND_PATH)  # Carica il suono del click
 
 # Caricamento del modello
 def load_model(class_names):
@@ -46,18 +56,17 @@ def predict(image_path, model, class_names, pokedex):
 # Funzione per Text-to-Speech
 def speak(text):
     engine = pyttsx3.init()
-    # Configura la voce italiana
     voices = engine.getProperty('voices')
     for voice in voices:
-        if "italian" in voice.languages:  # Cerca una voce italiana
+        if "italian" in voice.languages:
             engine.setProperty('voice', voice.id)
             break
-    # Leggi il testo
     engine.say(text)
     engine.runAndWait()
 
 # Funzione per caricare immagine
 def open_file():
+    # button_click_sound.play()  # Suona il suono del click
     filepath = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg *.png *.jpeg")])
     if filepath:
         img = Image.open(filepath)
@@ -69,17 +78,15 @@ def open_file():
 
 # Funzione per fare la predizione e aggiornare i risultati
 def classify_image():
+    # button_click_sound.play()  # Suona il suono del click
     filepath = getattr(image_label, 'filepath', None)
     if not filepath:
         result_label.config(text="Nessuna immagine selezionata!")
         return
-    # Predizione
     pokemon_name, pokemon_type, pokemon_desc = predict(filepath, model, class_names, pokedex)
-    # Stampa del testo prima dell'audio
     result_label.config(text=f"Nome: {pokemon_name}\nTipo: {pokemon_type}\nDescrizione: {pokemon_desc}")
-    # Genera audio
     audio_text = f"Il Nome è {pokemon_name}. Il tipo è {pokemon_type}. {pokemon_desc}."
-    result_label.update_idletasks()  # Forza l'aggiornamento immediato del testo nella GUI
+    result_label.update_idletasks()
     speak(audio_text)
 
 # GUI
