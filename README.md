@@ -32,7 +32,7 @@ Assicurati di avere installato Python 3.8 o versioni successive fino alla 3.12 (
 
 ### Altre librerie richieste:
 - `Image` e `ImageTk` (da Pillow): per gestire immagini nell'applicazione GUI
-
+- `Pygame`: per mettere la musica di sottofondo e i suoni
 ---
 
 ## Installazione
