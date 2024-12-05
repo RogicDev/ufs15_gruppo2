@@ -1,4 +1,5 @@
 # Progetto: Classificazione di Pokémon (1ª Generazione)
+![pikachu_raichu](https://github.com/user-attachments/assets/b5c02097-580a-4f6a-a340-a268c8f9e281)
 
 ## Descrizione del progetto
 Questo progetto utilizza modelli avanzati di Machine Learning per classificare immagini di Pokémon della prima generazione. L'obiettivo è creare un'applicazione desktop che consenta di caricare un'immagine di un Pokémon, elaborarla con un modello addestrato, e fornire predizioni sul Pokémon riconosciuto, insieme a una descrizione del Pokédex, il tipo e un fatto divertente.
