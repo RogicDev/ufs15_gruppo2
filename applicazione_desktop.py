@@ -9,9 +9,9 @@ import os
 import pyttsx3  # Libreria per Text-to-Speech
 import pygame  # Per la musica e i suoni
 
-# Percorsi dei file
+# Percorsi dei file globali
 MODEL_PATH = "pokemon_classifier.pth"
-POKEDEX_PATH = "Pokedex.xlsx"
+POKEDEX_PATH = "data_pokedex/pokedex.csv"
 DATASET_DIR = "data"
 BACKGROUND_MUSIC_PATH = "background_music.mp3"
 # BUTTON_SOUND_PATH = "button_click.wav"
@@ -20,6 +20,7 @@ BACKGROUND_MUSIC_PATH = "background_music.mp3"
 pygame.mixer.init()
 pygame.mixer.music.load(BACKGROUND_MUSIC_PATH)  # Carica la musica di background
 pygame.mixer.music.play(-1)  # Riproduci in loop la musica di background
+pygame.mixer.music.set_volume(0.01)
 
 # button_click_sound = pygame.mixer.Sound(BUTTON_SOUND_PATH)  # Carica il suono del click
 
@@ -43,15 +44,24 @@ def preprocess_image(image_path):
     image = Image.open(image_path).convert("RGB")
     return transform(image).unsqueeze(0)
 
-# Predizione
+# Predizione con l'uso della funzione pokedex
+def pokedex_info(prediction, pokedex):
+    row = pokedex[pokedex['Nome'].str.strip().str.lower() == prediction.strip().lower()]
+    if not row.empty:
+        description, tipo = row['Descrizione'].iloc[0], row['Tipo'].iloc[0]
+        return prediction, tipo, description
+    else:
+        return prediction, "Sconosciuto", "Descrizione non disponibile"
+
+# Nuova funzione predict che usa pokedex_info
 def predict(image_path, model, class_names, pokedex):
     image_tensor = preprocess_image(image_path).to(model[1])
     with torch.no_grad():
         outputs = model[0](image_tensor)
         _, predicted = torch.max(outputs, 1)
         pokemon_name = class_names[predicted.item()]
-        pokemon_info = pokedex.loc[pokedex['Nome'] == pokemon_name].iloc[0]
-        return pokemon_name, pokemon_info['Tipo'], pokemon_info['Descrizione']
+        pokemon_name, pokemon_type, pokemon_desc = pokedex_info(pokemon_name, pokedex)
+        return pokemon_name, pokemon_type, pokemon_desc
 
 # Funzione per Text-to-Speech
 def speak(text):
@@ -107,7 +117,7 @@ result_label = Label(app, text="", wraplength=350, justify="left")
 result_label.pack(pady=10)
 
 # Caricamento modello e Pokedex
-pokedex = pd.read_excel(POKEDEX_PATH)
+pokedex = pd.read_csv(POKEDEX_PATH)
 class_names = os.listdir(DATASET_DIR)
 model = load_model(class_names)
 

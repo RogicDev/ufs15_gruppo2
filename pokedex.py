@@ -1,11 +1,11 @@
 import pandas as pd
 
 def pokedex(prediction):
-    df = pd.read_csv(rf'data/pokedex.csv')
+    df = pd.read_csv(rf'ufs15_gruppo2/data_pokedex/pokedex.csv')
     row = df[df['Nome'].str.strip().str.lower() == prediction.strip().lower()]
     description, tipo = row['Descrizione'].iloc[0], row['Tipo'].iloc[0]
-    return description, tipo
+    return prediction, description, tipo
 
 if __name__ == '__main__':
-    description, tipo = pokedex('Venusaur')
-    print(f'Descrizione: {description}\nTipo: {tipo}')
+    nome, description, tipo = pokedex('Venusaur')
+    print(f'Nome: {nome}\nDescrizione: {description}\nTipo: {tipo}')

@@ -30,7 +30,7 @@ def preprocess_data():
     return train_loader, test_loader, dataset.classes
 
 # Creazione e training del modello
-def train_model(train_loader, test_loader, class_names):
+def train_model_resnet18(train_loader, test_loader, class_names):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = models.resnet18(pretrained=True)  # ResNet18 preaddestrato
     model.fc = nn.Linear(model.fc.in_features, len(class_names))  # Adattiamo l'output al numero di classi
@@ -75,4 +75,4 @@ def train_model(train_loader, test_loader, class_names):
 # Main script
 if __name__ == "__main__":
     train_loader, test_loader, class_names = preprocess_data()
-    train_model(train_loader, test_loader, class_names)
+    train_model_resnet18(train_loader, test_loader, class_names)
