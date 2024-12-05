@@ -14,7 +14,14 @@ MODEL_PATH = "pokemon_classifier.pth"
 POKEDEX_PATH = "data_pokedex/pokedex.csv"
 DATASET_DIR = "data"
 BACKGROUND_MUSIC_PATH = "background_music.mp3"
-# BUTTON_SOUND_PATH = "button_click.wav"
+BUTTON_SOUND_PATH = "button_click.wav"
+
+# # Percorsi dei file Andrea
+# MODEL_PATH = "ufs15_gruppo2/pokemon_classifier.pth"
+# POKEDEX_PATH = "ufs15_gruppo2/data_pokedex/pokedex.csv"
+# DATASET_DIR = "data"
+# BACKGROUND_MUSIC_PATH = "ufs15_gruppo2/background_music.mp3"
+# BUTTON_SOUND_PATH = "ufs15_gruppo2/button_click.wav"
 
 # Inizializza pygame per la musica e i suoni
 pygame.mixer.init()
@@ -22,7 +29,7 @@ pygame.mixer.music.load(BACKGROUND_MUSIC_PATH)  # Carica la musica di background
 pygame.mixer.music.play(-1)  # Riproduci in loop la musica di background
 pygame.mixer.music.set_volume(0.01)
 
-# button_click_sound = pygame.mixer.Sound(BUTTON_SOUND_PATH)  # Carica il suono del click
+button_click_sound = pygame.mixer.Sound(BUTTON_SOUND_PATH)  # Carica il suono del click
 
 # Caricamento del modello
 def load_model(class_names):
@@ -76,7 +83,7 @@ def speak(text):
 
 # Funzione per caricare immagine
 def open_file():
-    # button_click_sound.play()  # Suona il suono del click
+    button_click_sound.play()  # Suona il suono del click
     filepath = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg *.png *.jpeg")])
     if filepath:
         img = Image.open(filepath)
@@ -101,19 +108,53 @@ def classify_image():
 
 # GUI
 app = tk.Tk()
-app.title("Classificatore Pokémon")
+app.title("Pokédex")
 app.geometry("400x600")
 
+# Titolo in alto
+title_label = Label(app, text="Who's that Pokémon?", font=("Helvetica", 24, "bold"), fg="red")
+title_label.pack(pady=10)
+
+# Immagine caricata
 image_label = Label(app)
 image_label.pack(pady=10)
 
-open_button = Button(app, text="Seleziona immagine", command=open_file)
+# Bottone per selezionare immagine
+open_button = Button(
+    app,
+    text="Seleziona Immagine",
+    command=open_file,
+    font=("Helvetica", 12, "bold"),
+    bg="blue",
+    fg="white",
+    activebackground="darkblue",
+    activeforeground="white"
+)
 open_button.pack(pady=10)
 
-classify_button = Button(app, text="Classifica immagine", command=classify_image)
+# Bottone per classificare immagine
+classify_button = Button(
+    app,
+    text="Classifica Immagine",
+    command=classify_image,
+    font=("Helvetica", 12, "bold"),
+    bg="green",
+    fg="white",
+    activebackground="darkgreen",
+    activeforeground="white"
+)
 classify_button.pack(pady=10)
 
-result_label = Label(app, text="", wraplength=350, justify="left")
+# Risultati della classificazione
+result_label = Label(
+    app,
+    text="",
+    font=("Helvetica", 12),
+    wraplength=350,
+    justify="left",
+    bg="lightyellow",
+    fg="black"
+)
 result_label.pack(pady=10)
 
 # Caricamento modello e Pokedex
