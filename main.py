@@ -29,6 +29,8 @@ def preprocess_data():
     
     dataset = datasets.ImageFolder(DATASET_PATH, transform=transform)
     
+    #train_data, test_data = train_test_split(dataset, test_size=0.2, random_state=42)
+
     # Dividi il dataset in train e test
     train_size = int(0.8 * len(dataset))  # 80% per il training
     test_size = len(dataset) - train_size
