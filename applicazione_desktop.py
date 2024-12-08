@@ -27,9 +27,10 @@ BUTTON_SOUND_PATH = "button_click.wav"
 pygame.mixer.init()
 pygame.mixer.music.load(BACKGROUND_MUSIC_PATH)  # Carica la musica di background
 pygame.mixer.music.play(-1)  # Riproduci in loop la musica di background
-pygame.mixer.music.set_volume(0.01)
+pygame.mixer.music.set_volume(0.1)
 
 button_click_sound = pygame.mixer.Sound(BUTTON_SOUND_PATH)  # Carica il suono del click
+button_click_sound.set_volume(0.5)
 
 # Caricamento del modello
 def load_model(class_names):
@@ -49,7 +50,10 @@ def preprocess_image(image_path):
         transforms.Normalize((0.5,), (0.5,))
     ])
     image = Image.open(image_path).convert("RGB")
+    #Prima: [channels, height, width] (3, 128, 128)
     return transform(image).unsqueeze(0)
+    #Dopo: [batch_size, channels, height, width] (1, 3, 128, 128)
+    #Batch size necessario perché rappresenta il numero di esempi che vengono processati dal modello durante un'iterazione
 
 # Predizione con l'uso della funzione pokedex
 def pokedex_info(prediction, pokedex):
@@ -105,6 +109,8 @@ def classify_image():
     audio_text = f"Il Nome è {pokemon_name}. Il tipo è {pokemon_type}. {pokemon_desc}."
     result_label.update_idletasks()
     speak(audio_text)
+
+#---------------------------------------------------------------------------------------------------------
 
 # GUI
 app = tk.Tk()

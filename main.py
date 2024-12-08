@@ -8,12 +8,10 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 # Path ai dati
-DATASET_PATH = "./data"  # Sostituisci con il path del dataset di immagini
-POKEDEX_PATH = "Pokedex.xlsx"  # Il file caricato
-
+DATASET_PATH = "data"  # Sostituisci con il path del dataset di immagini
 
 # Preprocessing dei dati
 from torch.utils.data import random_split
@@ -80,27 +78,41 @@ def train_model_resnet50(train_loader, test_loader, class_names):
         epoch_accuracy = correct_predictions / total_samples
         
         print(f"Epoch {epoch+1}/{epochs}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.4f}")
-
     
-    # Valutazione sul test set
+    # Salvataggio del modello
+    torch.save(model.state_dict(), "pokemon_classifier.pth")
+    torch.save(model, 'entire_pokemon_classifier.pth')
+    return model
+
+
+# Funzione per calcolare e visualizzare la Confusion Matrix
+def evaluate_model_with_confusion_matrix(model, test_loader, class_names):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
     model.eval()
-    correct = 0
-    total = 0
+
+    all_labels = []
+    all_predictions = []
+
     with torch.no_grad():
         for images, labels in test_loader:
             images, labels = images.to(device), labels.to(device)
             outputs = model(images)
             _, predicted = torch.max(outputs, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-    
-    print(f"Accuracy: {100 * correct / total:.2f}%")
-    
-    # Salvataggio del modello
-    torch.save(model.state_dict(), "pokemon_classifier.pth")
-    return model
+            
+            # Salva i label reali e le predizioni
+            all_labels.extend(labels.cpu().numpy())
+            all_predictions.extend(predicted.cpu().numpy())
+
+    # Calcolo della confusion matrix
+    cm = confusion_matrix(all_labels, all_predictions)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    disp.plot(cmap="viridis", xticks_rotation='vertical')
+    disp.ax_.set_title("Confusion Matrix")
+    return cm
 
 # Main script
 if __name__ == "__main__":
     train_loader, test_loader, class_names = preprocess_data()
-    train_model_resnet50(train_loader, test_loader, class_names)
+    model = train_model_resnet50(train_loader, test_loader, class_names)
+    cm = evaluate_model_with_confusion_matrix(model, test_loader, class_names)
