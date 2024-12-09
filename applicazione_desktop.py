@@ -16,13 +16,6 @@ DATASET_DIR = "data"
 BACKGROUND_MUSIC_PATH = "background_music.mp3"
 BUTTON_SOUND_PATH = "button_click.wav"
 
-# # Percorsi dei file Andrea
-# MODEL_PATH = "ufs15_gruppo2/pokemon_classifier.pth"
-# POKEDEX_PATH = "ufs15_gruppo2/data_pokedex/pokedex.csv"
-# DATASET_DIR = "data"
-# BACKGROUND_MUSIC_PATH = "ufs15_gruppo2/background_music.mp3"
-# BUTTON_SOUND_PATH = "ufs15_gruppo2/button_click.wav"
-
 # Inizializza pygame per la musica e i suoni
 pygame.mixer.init()
 pygame.mixer.music.load(BACKGROUND_MUSIC_PATH)  # Carica la musica di background
@@ -35,7 +28,7 @@ button_click_sound.set_volume(0.5)
 # Caricamento del modello
 def load_model(class_names):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = models.resnet18(pretrained=True)
+    model = models.resnet50(pretrained=True)
     model.fc = torch.nn.Linear(model.fc.in_features, len(class_names))
     model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
     model = model.to(device)
@@ -88,7 +81,7 @@ def speak(text):
 # Funzione per caricare immagine
 def open_file():
     button_click_sound.play()  # Suona il suono del click
-    filepath = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg *.png *.jpeg")])
+    filepath = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg *.png *.jpeg, *.webp")])
     if filepath:
         img = Image.open(filepath)
         img.thumbnail((300, 300))
