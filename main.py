@@ -18,9 +18,6 @@ import seaborn as sns
 DATASET_PATH = "data"  # Sostituisci con il path del dataset di immagini
 
 # Preprocessing dei dati
-from torch.utils.data import random_split
-
-# Preprocessing dei dati
 def preprocess_data():
     # Trasformazioni delle immagini
     transform = transforms.Compose([
@@ -50,7 +47,12 @@ def train_model_resnet50(train_loader, test_loader, class_names):
     model.fc = nn.Linear(model.fc.in_features, len(class_names))  # Adattiamo l'output al numero di classi
     model = model.to(device)
     
-    criterion = nn.CrossEntropyLoss()
+    # Calcolo dei pesi per classe
+    dataset = train_loader.dataset.dataset  # Ottieni il dataset di ImageFolder dall'oggetto random_split
+    class_weights = calculate_class_weights(dataset).to(device)
+    
+    # Definisci la funzione di perdita con i pesi
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(model.fc.parameters(), lr=0.001)
     
     epochs = 10
@@ -109,7 +111,7 @@ def evaluate_model_with_confusion_matrix(model, test_loader, class_names):
             all_predictions.extend(predicted.cpu().numpy())
 
     # Calcolo della confusion matrix
-    cm = confusion_matrix(all_labels, all_predictions)
+    cm = confusion_matrix(all_labels, all_predictions, normalize='true')
 
     # Heatmap con Seaborn
     plt.figure(figsize=(20, 15))  # Dimensioni più grandi per la leggibilità
@@ -141,28 +143,14 @@ def evaluate_model_with_metrics(model, test_loader, class_names):
             all_predictions.extend(predicted.cpu().numpy())
 
     # Calcolo delle metriche
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        all_labels, all_predictions, average=None, labels=range(len(class_names))
-    )
-
-    # Calcolo delle metriche aggregate (micro/macro averaging)
     report = classification_report(all_labels, all_predictions, target_names=class_names)
     
-    # Stampa dei risultati
+    # Stampa del classification report
     print("Classification Report:\n")
     print(report)
-
-    # Visualizzazione delle metriche per classe
-    metrics_per_class = {
-        class_name: {"Precision": p, "Recall": r, "F1-Score": f}
-        for class_name, p, r, f in zip(class_names, precision, recall, f1)
-    }
-
-    print("\nMetrics per Class:")
-    for class_name, metrics in metrics_per_class.items():
-        print(f"{class_name}: {metrics}")
     
-    return metrics_per_class
+    return report
+
 
 def load_model(model_path, num_classes):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -189,12 +177,27 @@ def save_confusion_matrix(cm, class_names, filename="confusion_matrix.png"):
     plt.savefig(filename, dpi=300)
     plt.close()
 
+def calculate_class_weights(dataset):
+    # Conta il numero di campioni per ciascuna classe
+    class_counts = [0] * len(dataset.classes)
+    for _, label in dataset:
+        class_counts[label] += 1
+    
+    # Calcolo dei pesi come inverso della frequenza delle classi
+    total_samples = sum(class_counts)
+    class_weights = [total_samples / count for count in class_counts]
+    
+    # Normalizzazione opzionale dei pesi
+    class_weights = torch.tensor(class_weights, dtype=torch.float)
+    return class_weights
+
 # Main script
 if __name__ == "__main__":
 
     train_loader, test_loader, class_names = preprocess_data()
-    model = train_model_resnet50(train_loader, test_loader, class_names)
+    #model = train_model_resnet50(train_loader, test_loader, class_names) #allenamento del modello
+    model = load_model("pokemon_classifier.pth", len(class_names)) #caricamento del modello per vedere i grafici e il class report
     cm = evaluate_model_with_confusion_matrix(model, test_loader, class_names)
-    metrics = evaluate_model_with_metrics(model, test_loader, class_names)
+    report = evaluate_model_with_metrics(model, test_loader, class_names)
     save_confusion_matrix(cm, class_names)
     
