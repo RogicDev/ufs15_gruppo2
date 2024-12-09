@@ -9,6 +9,10 @@ from sklearn.model_selection import train_test_split
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from torch.utils.data import random_split
+import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report, precision_recall_fscore_support
+import seaborn as sns
 
 # Path ai dati
 DATASET_PATH = "data"  # Sostituisci con il path del dataset di immagini
@@ -94,25 +98,103 @@ def evaluate_model_with_confusion_matrix(model, test_loader, class_names):
     all_labels = []
     all_predictions = []
 
+    # Raccolta delle predizioni e dei label reali
     with torch.no_grad():
         for images, labels in test_loader:
             images, labels = images.to(device), labels.to(device)
             outputs = model(images)
             _, predicted = torch.max(outputs, 1)
             
-            # Salva i label reali e le predizioni
             all_labels.extend(labels.cpu().numpy())
             all_predictions.extend(predicted.cpu().numpy())
 
     # Calcolo della confusion matrix
     cm = confusion_matrix(all_labels, all_predictions)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
-    disp.plot(cmap="viridis", xticks_rotation='vertical')
-    disp.ax_.set_title("Confusion Matrix")
+
+    # Heatmap con Seaborn
+    plt.figure(figsize=(20, 15))  # Dimensioni più grandi per la leggibilità
+    sns.heatmap(cm, annot=False, fmt="d", cmap="viridis", xticklabels=class_names, yticklabels=class_names)
+    plt.title("Confusion Matrix Heatmap")
+    plt.xlabel("Predicted Labels")
+    plt.ylabel("True Labels")
+    plt.xticks(rotation=90)
+    plt.yticks(rotation=0)
+    plt.show()
     return cm
+
+def evaluate_model_with_metrics(model, test_loader, class_names):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+    model.eval()
+
+    all_labels = []
+    all_predictions = []
+
+    # Raccolta delle predizioni e dei label reali
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs, 1)
+            
+            all_labels.extend(labels.cpu().numpy())
+            all_predictions.extend(predicted.cpu().numpy())
+
+    # Calcolo delle metriche
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        all_labels, all_predictions, average=None, labels=range(len(class_names))
+    )
+
+    # Calcolo delle metriche aggregate (micro/macro averaging)
+    report = classification_report(all_labels, all_predictions, target_names=class_names)
+    
+    # Stampa dei risultati
+    print("Classification Report:\n")
+    print(report)
+
+    # Visualizzazione delle metriche per classe
+    metrics_per_class = {
+        class_name: {"Precision": p, "Recall": r, "F1-Score": f}
+        for class_name, p, r, f in zip(class_names, precision, recall, f1)
+    }
+
+    print("\nMetrics per Class:")
+    for class_name, metrics in metrics_per_class.items():
+        print(f"{class_name}: {metrics}")
+    
+    return metrics_per_class
+
+def load_model(model_path, num_classes):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    # Crea un'istanza del modello
+    model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
+    model.fc = nn.Linear(model.fc.in_features, num_classes)  # Adattamento delle classi
+    model = model.to(device)
+    
+    # Carica i pesi salvati
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+
+    return model
+
+def save_confusion_matrix(cm, class_names, filename="confusion_matrix.png"):
+    plt.figure(figsize=(20, 15))
+    sns.heatmap(cm, annot=False, fmt="d", cmap="viridis", xticklabels=class_names, yticklabels=class_names)
+    plt.title("Confusion Matrix")
+    plt.xlabel("Predicted Labels")
+    plt.ylabel("True Labels")
+    plt.xticks(rotation=90)
+    plt.yticks(rotation=0)
+    plt.savefig(filename, dpi=300)
+    plt.close()
 
 # Main script
 if __name__ == "__main__":
+
     train_loader, test_loader, class_names = preprocess_data()
     model = train_model_resnet50(train_loader, test_loader, class_names)
     cm = evaluate_model_with_confusion_matrix(model, test_loader, class_names)
+    metrics = evaluate_model_with_metrics(model, test_loader, class_names)
+    save_confusion_matrix(cm, class_names)
+    
