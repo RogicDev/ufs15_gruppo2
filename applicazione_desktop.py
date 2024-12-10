@@ -3,6 +3,7 @@ from tkinter import filedialog, Label, Button
 from PIL import Image, ImageTk
 import torch
 from torchvision import transforms
+from torchvision.models import resnet50, ResNet50_Weights
 import pandas as pd
 from torchvision import models
 import os
@@ -28,7 +29,7 @@ button_click_sound.set_volume(0.5)
 # Caricamento del modello
 def load_model(class_names):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = models.resnet50(pretrained=True)
+    model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
     model.fc = torch.nn.Linear(model.fc.in_features, len(class_names))
     model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
     model = model.to(device)
@@ -38,7 +39,7 @@ def load_model(class_names):
 # Preprocessing immagine
 def preprocess_image(image_path):
     transform = transforms.Compose([
-        transforms.Resize((128, 128)),
+        transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
